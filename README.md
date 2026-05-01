@@ -1,90 +1,55 @@
 # Stat Arb Bot — BTC/ETH
 
-Un bot de trading algorithmique qui exploite la corrélation entre Bitcoin et Ethereum. Quand les deux actifs s'écartent anormalement l'un de l'autre, le bot parie sur leur retour à la normale. Simple en théorie, redoutable en pratique.
+A self-contained algorithmic trading bot that profits from temporary price divergences between Bitcoin and Ethereum. When the two assets drift apart, the bot bets on their reunion — and pockets the spread.
 
 ---
 
-## Résultats backtest (2021 → 2026)
+## Results (2021 → 2026 backtest)
 
-| | |
+| Metric | Value |
 |---|---|
-| Capital de départ | 100$ |
-| Capital final | 470 937$ |
-| Return total | +470 837% |
+| Starting capital | $100 |
+| Final capital | $470,937 |
+| Total return | +470,837% |
 | Sharpe Ratio | 8.40 |
 | Max Drawdown | -6.35% |
 | Win Rate | 85% |
-| Nombre de trades | 966 |
-| Levier | x2 |
+| Trades | 966 |
+| Leverage | x2 |
 
-La stratégie a survécu au bear market 2022 (-70% sur BTC) sans jamais s'effondrer.
-
----
-
-## Comment ca marche
-
-```
-1. On calcule le hedge ratio dynamique entre BTC et ETH via Kalman Filter
-2. On construit un spread : log(BTC) - beta * log(ETH)
-3. On normalise ce spread en Z-Score
-4. Si Z > 2  → spread trop haut → on short BTC, on long ETH
-   Si Z < -2 → spread trop bas  → on long BTC, on short ETH
-   Si |Z| < 0.5 → retour a la moyenne → on ferme tout
-5. La taille de chaque position est calculee via Kelly Criterion (60%)
-```
+Survived the 2022 crypto crash (-70% BTC) without blowing up.
 
 ---
 
-## Structure du projet
+## How it works
+
+The bot watches the BTC/ETH spread in real time. When the spread stretches too far from its historical norm, it enters a market-neutral trade — long one asset, short the other — and exits once the spread snaps back.
+
+Under the hood: a **Kalman Filter** tracks the dynamic hedge ratio between the two assets, a **rolling Z-score** triggers entries and exits, and **Kelly Criterion** sizes each position.
+
+---
+
+## Project structure
 
 ```
-Stat_Arb_Project/
-├── agent.py          bot live sur Binance
-├── backtest.py       simulation historique
-├── requirements.txt  dependances Python
+├── agent.py          live trading bot (Binance Futures)
+├── backtest.py       historical simulation engine
+├── requirements.txt
 └── results/
-    ├── results.txt       metrics + trade log complet
-    └── equity_curve.png  graphiques
+    ├── results.txt       full metrics + trade log
+    └── equity_curve.png  charts
 ```
 
 ---
 
-## Installation
+## Quickstart
 
 ```bash
 pip install -r requirements.txt
-```
-
-## Lancer le backtest
-
-```bash
-python backtest.py
-```
-
-Les résultats sont sauvegardés automatiquement dans le dossier `results/`.
-
-## Lancer le bot en live
-
-```bash
-# 1. Ajoute tes cles API Binance dans agent.py
-# 2. Uncommente la ligne create_market_order
-# 3. Lance :
-python agent.py
+python backtest.py   # runs simulation, saves results/
+python agent.py      # live bot — paper trading by default
 ```
 
 ---
 
-## Config principale
-
-```python
-PAIR_A     = "BTC/USDT"
-PAIR_B     = "ETH/USDT"
-Z_ENTRY    = 2.0        # seuil d'entree
-Z_EXIT     = 0.5        # seuil de sortie
-KELLY_FRAC = 0.60       # agressivite du sizing
-LEVERAGE   = 2          # levier Binance Futures
-```
-
----
-
-> **Disclaimer** — Les performances passées ne garantissent pas les résultats futurs. Teste toujours en paper trading avant de risquer du vrai capital. Le bot est en mode simulation par défaut (aucun ordre réel envoyé).
+> Past performance does not guarantee future results. The bot runs in simulation mode by default — no real orders are sent until you explicitly enable them.
