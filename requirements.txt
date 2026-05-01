@@ -1,0 +1,6 @@
+ccxt==4.3.89
+pykalman==0.9.7
+statsmodels==0.14.2
+numpy==1.26.4
+pandas==2.2.2
+matplotlib==3.9.0
